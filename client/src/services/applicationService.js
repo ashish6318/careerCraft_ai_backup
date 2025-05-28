@@ -1,42 +1,42 @@
 import axios from 'axios';
 
 // 1. Get the general API root URL from environment variables
-//    This will be the base URL for this service directly.
 const API_ROOT_URL = import.meta.env.VITE_API_ROOT_URL || 'http://localhost:5000/api/v1';
 
-// 2. Configure axios
+// 2. Construct the specific base URL for the application service
+const APPLICATIONS_SERVICE_BASE_URL = `${API_ROOT_URL}/applications`;
+
+// 3. Create the apiClient with this specific base URL
 const apiClient = axios.create({
-  baseURL: API_ROOT_URL, // e.g., http://localhost:5000/api/v1
+  baseURL: APPLICATIONS_SERVICE_BASE_URL, // e.g., http://localhost:5000/api/v1/applications
   withCredentials: true,
 });
 
-// --- Seeker Profile ---
-const getSeekerProfile = async () => {
-  // Calls GET <API_ROOT_URL>/profile/seeker/me
-  const response = await apiClient.get('/profile/seeker/me');
+const applyForJob = async (jobId) => {
+  const response = await apiClient.post(`/job/${jobId}/apply`);
   return response.data;
 };
 
-const updateSeekerProfile = async (profileData) => {
-  // Calls PUT <API_ROOT_URL>/profile/seeker/me
-  const response = await apiClient.put('/profile/seeker/me', profileData);
+const getMyApplications = async () => {
+  const response = await apiClient.get('/my-applications');
   return response.data;
 };
 
-const uploadSeekerResume = async (formData) => {
-  // Calls POST <API_ROOT_URL>/profile/seeker/me/resume
-  const response = await apiClient.post('/profile/seeker/me/resume', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
+const getJobApplicants = async (jobId) => {
+  const response = await apiClient.get(`/job/${jobId}/applicants`);
   return response.data;
 };
 
-const userService = {
-  getSeekerProfile,
-  updateSeekerProfile,
-  uploadSeekerResume,
+const updateApplicationStatus = async (applicationId, status) => {
+  const response = await apiClient.put(`/${applicationId}/status`, { status });
+  return response.data;
 };
 
-export default userService;
+const applicationService = {
+  applyForJob,
+  getMyApplications,       // Ensures getMyApplications is exported
+  getJobApplicants,
+  updateApplicationStatus,
+};
+
+export default applicationService;

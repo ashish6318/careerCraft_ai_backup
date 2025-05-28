@@ -1,0 +1,59 @@
+name: Client CI (Vercel Integration)
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'client/**'
+      - '.github/workflows/client-ci-cd.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'client/**'
+      - '.github/workflows/client-ci-cd.yml'
+
+jobs:
+  build_and_test_client: # Renamed job to reflect CI focus
+    name: Build and Test Client
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./client # All 'run' steps execute in the 'client' folder
+
+    steps:
+      - name: Checkout code 🛎️
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ⚙️
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # IMPORTANT: Adjust to your client's Node.js version
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install dependencies 📦
+        run: npm ci # If using yarn: yarn install --frozen-lockfile
+
+      # Optional: Uncomment and adjust if you have these scripts in client/package.json
+      # - name: Lint code 🧐
+      #   run: npm run lint
+      #
+      # - name: Run tests 🧪
+      #   run: npm test -- --watchAll=false # Adjust test command as needed
+      #   env:
+      #     CI: true
+
+      - name: Build application 🧱
+        run: npm run build # Assumes your build script is 'build' (e.g., vite build)
+        env:
+          # If your build needs VITE_API_URL for some reason during this CI build,
+          # you could set it using a secret:
+          # VITE_API_URL: ${{ secrets.VITE_API_URL_STAGING }} # Example for a non-production API URL for CI builds
+          CI: true
+
+      # NOTE: The explicit "Deploy to Vercel" step has been removed.
+      # Vercel's Git integration will handle the deployment.
+      # This workflow now primarily serves as a CI check.

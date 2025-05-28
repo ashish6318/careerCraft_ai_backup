@@ -1,0 +1,68 @@
+name: Server CI/CD (Render)
+
+on:
+  push:
+    branches:
+      - main # Runs when you push to the 'main' branch
+    paths:
+      - 'server/**'      # Only run if changes are in the 'server' directory
+      - '.github/workflows/server-ci-cd.yml' # Or if this workflow file itself changes
+  pull_request:
+    branches:
+      - main # Runs when a pull request is made to the 'main' branch
+    paths:
+      - 'server/**'
+      - '.github/workflows/server-ci-cd.yml'
+
+jobs:
+  build_test_and_deploy_server:
+    name: Build, Test, and Deploy Server
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./server
+
+    steps:
+      - name: Checkout code 🛎️
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js ⚙️
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18' # IMPORTANT: Adjust to your server's Node.js version
+          cache: 'npm'
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies 📦
+        run: npm ci # If using yarn: yarn install --frozen-lockfile
+
+      # Optional: If your server has a build step (e.g., TypeScript compilation)
+      # - name: Build server (if applicable) ⚙️
+      #   run: npm run build
+
+      - name: Lint code 🧐 (Optional)
+        # Uncomment if you have a lint script in server/package.json
+        # run: npm run lint
+
+      - name: Run tests 🧪
+        # Ensure you have a 'test' script in server/package.json
+        # (e.g., "test": "jest --coverage --runInBand")
+        # --runInBand can be useful if tests need to run sequentially, e.g., due to DB state
+        run: npm test # Adjust your test command if needed
+        env:
+          CI: true
+          NODE_ENV: test # Set Node environment to 'test'
+          # Example: Using a specific test database URL from GitHub Secrets
+          # You would create a secret named DB_URL_TEST_SERVER in your GitHub repo settings.
+          # DB_URL: ${{ secrets.DB_URL_TEST_SERVER }}
+          # Another example:
+          # JWT_SECRET_TEST: ${{ secrets.JWT_SECRET_TEST_SERVER }}
+          # Add other environment variables your tests might need
+
+      - name: Trigger Render Deploy Hook 🚀
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' # Only deploy on push to main
+        run: |
+          curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL_PRODUCTION }}
+        # Alternatively, if your deploy hook is a GET request:
+        # run: curl ${{ secrets.RENDER_DEPLOY_HOOK_URL_PRODUCTION }}

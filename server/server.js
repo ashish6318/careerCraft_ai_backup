@@ -20,6 +20,13 @@ const app = express();
 // Connect to MongoDB
 connectDB();
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+// Add this BEFORE your CORS and other middleware
+if (isProduction) {
+  app.set('trust proxy', 1); // Trust the first proxy hop (common for Render)
+}
+
 // Middleware
 app.use(cors({
     origin: process.env.FRONTEND_URL || 'http://localhost:5173',

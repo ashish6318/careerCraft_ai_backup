@@ -1,43 +1,42 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api/v1/applications';
+// 1. Get the general API root URL from environment variables
+//    This will be the base URL for this service directly.
+const API_ROOT_URL = import.meta.env.VITE_API_ROOT_URL || 'http://localhost:5000/api/v1';
 
+// 2. Configure axios
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_ROOT_URL, // e.g., http://localhost:5000/api/v1
   withCredentials: true,
 });
 
-const applyForJob = async (jobId) => {
-  const response = await apiClient.post(`/job/${jobId}/apply`);
+// --- Seeker Profile ---
+const getSeekerProfile = async () => {
+  // Calls GET <API_ROOT_URL>/profile/seeker/me
+  const response = await apiClient.get('/profile/seeker/me');
   return response.data;
 };
 
-// Function to get all applications for the logged-in seeker
-const getMyApplications = async () => {
-  const response = await apiClient.get('/my-applications'); // GET /api/v1/applications/my-applications
+const updateSeekerProfile = async (profileData) => {
+  // Calls PUT <API_ROOT_URL>/profile/seeker/me
+  const response = await apiClient.put('/profile/seeker/me', profileData);
   return response.data;
 };
 
-// Function to get all applicants for a specific job (for recruiters)
-const getJobApplicants = async (jobId) => {
-  // GET /api/v1/applications/job/:jobId/applicants
-  const response = await apiClient.get(`/job/${jobId}/applicants`);
+const uploadSeekerResume = async (formData) => {
+  // Calls POST <API_ROOT_URL>/profile/seeker/me/resume
+  const response = await apiClient.post('/profile/seeker/me/resume', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };
 
-// Function to update the status of an application (for recruiters)
-const updateApplicationStatus = async (applicationId, status) => {
-  // PUT /api/v1/applications/:applicationId/status
-  const response = await apiClient.put(`/${applicationId}/status`, { status }); // Send { status: "newStatus" } in body
-  return response.data; // Expected: { message, application }
+const userService = {
+  getSeekerProfile,
+  updateSeekerProfile,
+  uploadSeekerResume,
 };
 
-const applicationService = {
-  applyForJob,
-  getMyApplications,
-  getJobApplicants,         // Add new function
-  updateApplicationStatus,  // Add new function
-};
-
-export default applicationService;
-
+export default userService;

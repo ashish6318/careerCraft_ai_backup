@@ -1,36 +1,36 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:5000/api/v1/ai'; // Base URL for AI endpoints
+// 1. Get the general API root URL from environment variables
+const API_ROOT_URL = import.meta.env.VITE_API_ROOT_URL || 'http://localhost:5000/api/v1';
 
-// Configure axios to send credentials (cookies) with requests
+// 2. Construct the specific base URL for the AI service
+const AI_SERVICE_BASE_URL = `${API_ROOT_URL}/ai`;
+
+// 3. Configure axios to send credentials (cookies) with requests
 const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: AI_SERVICE_BASE_URL, // e.g., http://localhost:5000/api/v1/ai
   withCredentials: true,
 });
 
 // Fetch AI-powered resume feedback for the logged-in seeker
 const fetchResumeSuggestions = async () => {
-  // The backend route is POST /api/v1/ai/resume-feedback
-  // It uses the authenticated user's session to find their resume.
-  // No request body is needed for this specific POST request.
   const response = await apiClient.post('/resume-feedback');
-  return response.data; // Expected: { suggestions: "..." } or error
+  return response.data;
 };
+
 const generateAiTestQuestions = async (params) => {
-  // params = { category, topic, difficultyLevel, numberOfQuestions }
   const response = await apiClient.post('/generate-test-questions', params);
-  return response.data; // Expected: { message, questions: [...] } or error
+  return response.data;
 };
+
 const fetchCareerRoadmap = async ({ role, currentMessage, conversationHistory }) => {
-  // Backend route is POST /api/v1/ai/career-roadmap
-  // Body can contain: { role, currentMessage, conversationHistory }
   const payload = {};
-  if (role) payload.role = role; // For initial roadmap request
+  if (role) payload.role = role;
   if (currentMessage) payload.currentMessage = currentMessage;
   if (conversationHistory) payload.conversationHistory = conversationHistory;
 
   const response = await apiClient.post('/career-roadmap', payload);
-  return response.data; // Expected: { roadmap: "markdown_string..." } or error
+  return response.data;
 };
 
 const aiService = {
